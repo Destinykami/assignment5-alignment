@@ -7,7 +7,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerBase
-
+from cs336_alignment.math_sft import tokenize_prompt_and_output
 
 def run_tokenize_prompt_and_output(
     prompt_strs: list[str],
@@ -31,7 +31,10 @@ def run_tokenize_prompt_and_output(
             "response_mask": torch.Tensor of shape (batch_size, max(prompt_and_output_lens) - 1):
                 a mask on the response tokens in `labels`.
     """
-    raise NotImplementedError
+    return tokenize_prompt_and_output(
+        prompt_strs=prompt_strs,
+        output_strs=output_strs,
+        tokenizer=tokenizer,)
 
 
 def run_compute_group_normalized_rewards(
