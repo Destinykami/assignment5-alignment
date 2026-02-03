@@ -24,6 +24,7 @@ def compute_entropy(logits: torch.Tensor) -> torch.Tensor:
     entropy = -torch.sum(torch.exp(log_probs) * log_probs, dim=-1)  # shape: (B, S)
     
     return entropy
+    
 def get_response_log_probs(
     model: PreTrainedModel,
     input_ids: torch.Tensor,
@@ -50,10 +51,8 @@ def get_response_log_probs(
     labels = labels.to(model.device)
     batch_size, seq_len = input_ids.shape
 
-    # 前向传播获取logits，不计算梯度（评分任务无需梯度，节省显存）
-    with torch.no_grad():
-        model_outputs = model(input_ids=input_ids)
-        logits = model_outputs.logits  # 形状: (batch_size, sequence_length, vocab_size)
+    model_outputs = model(input_ids=input_ids)
+    logits = model_outputs.logits  # 形状: (batch_size, sequence_length, vocab_size)
 
     # 步骤1：数值稳定计算所有词汇的对数概率 log(p_i) = logits_i - logsumexp(logits, dim=-1)
     log_Z = torch.logsumexp(logits, dim=-1)  # 归一化常数，形状: (B, S)
@@ -79,3 +78,45 @@ def get_response_log_probs(
         result["token_entropy"] = token_entropy
 
     return result
+
+def masked_normalize(
+    tensor: torch.Tensor,
+    mask: torch.Tensor,
+    normalize_constant: float,
+    dim: int | None = None,
+) -> torch.Tensor:
+    """
+    带布尔掩码的张量求和与常数归一化：仅mask==1的元素参与求和，求和后除以归一化常数。
+    支持指定维度求和或全维度求和，保证mask无效元素不贡献任何计算。
+
+    Args:
+        tensor: torch.Tensor - 待求和、归一化的目标张量，任意维度。
+        mask: torch.Tensor - 掩码张量，与tensor形状完全一致；mask==1/True为有效元素，参与求和。
+        normalize_constant: float - 归一化常数，求和结果将除以该值。
+        dim: int | None - 求和维度；None表示对所有维度求和，支持正/负索引。
+
+    Returns:
+        torch.Tensor - 归一化后的求和结果，形状规则：
+                       - dim=None → 返回标量（0维张量）；
+                       - 指定dim → 返回与原张量维度数相同的张量，求和维度被压缩为1。
+    """
+    # 关键校验：mask与tensor形状必须一致，避免维度不匹配
+    if tensor.shape != mask.shape:
+        raise ValueError(f"Tensor shape ({tensor.shape}) must match mask shape ({mask.shape})")
+    
+    # 掩码过滤——将mask=0的位置置0，仅保留有效元素
+    # 转换为同类型张量，避免数据类型误差（如float16张量与uint8掩码相乘）
+    masked_tensor = tensor * mask.to(dtype=tensor.dtype)
+    
+    if dim is not None:
+        # 指定维度求和：keepdim=False，直接删除该维度，无冗余
+        sum_result = torch.sum(masked_tensor, dim=dim, keepdim=False)
+    else:
+        # 全维度求和：先保留维度，再挤压为标量
+        sum_result = torch.sum(masked_tensor, dim=dim, keepdim=True)
+        sum_result = sum_result.squeeze()
+    
+    # 步骤3：常数归一化——除以归一化常数，完成最终计算
+    normalized_result = sum_result / normalize_constant
+    
+    return normalized_result
