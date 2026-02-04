@@ -29,8 +29,8 @@ def evaluate_vllm(
 
 if __name__=="__main__":
     reward_fn=r1_zero_reward_fn
-    save_fpath="../output/Qwen2.5_Math_1.5B_math_sft_results.pkl"
-    sft_model_path = "/root/autodl-tmp/assignment5-alignment/output/model/sft_qwen_math_1.5b"  #微调后的模型
+    save_fpath="../output/Qwen2.5_Math_1.5B_math_ei_sft_results.pkl"
+    sft_model_path = "/root/autodl-tmp/assignment5-alignment/output/model/ei_sft_qwen_math_1.5b"  #微调后的模型
     # 读取数据集
     math_fpath="../data/MATH/validation.jsonl"
     dataset=[]
