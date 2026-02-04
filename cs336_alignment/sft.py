@@ -175,24 +175,23 @@ def sft_collate_fn(
 
 
 # SFT
-if __name__=="__main__":
+def sft(data_path="../data/MATH/sft.jsonl",model_name="Qwen/Qwen2.5-Math-1.5B",save_path="../output/model/sft_qwen_math_1.5b"):
     DEVICE='cuda'       # [CONFIG]
     BATCH_SIZE=2        #[CONFIG]
     LEARNING_RATE=5e-5  #[CONFIG]
     GRAD_ACCUM_STEPS = 4  # 显存不足增大至8/16
     EPOCHS = 3  # 可根据收敛情况调整
-    SAVE_MODEL_PATH = "../output/model/sft_qwen_math_1.5b"  # 模型保存路径
+    SAVE_MODEL_PATH = save_path  # 模型保存路径
     MAX_TRAIN_SAMPLES = None  # 设为None使用全部数据，如需限制设具体数值（如500）
     #加载模型和分词器
     model = AutoModelForCausalLM.from_pretrained(
-        "Qwen/Qwen2.5-Math-1.5B",
+        model_name,
         torch_dtype=torch.bfloat16,
         attn_implementation="flash_attention_2",
         device_map='cuda'  # 强制模型在GPU上初始化，FA2组件同步构建在GPU
     )
-    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-Math-1.5B")
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
     #构建Dataset和DataLoader
-    data_path="../data/MATH/sft.jsonl"
     train_prompts=[]
     train_outputs=[]
     with open(data_path,'r') as f:
@@ -287,3 +286,6 @@ if __name__=="__main__":
     model.save_pretrained(SAVE_MODEL_PATH, safe_serialization=True)
     tokenizer.save_pretrained(SAVE_MODEL_PATH)
     print(f"微调完成！模型已保存至：{SAVE_MODEL_PATH}")
+
+if __name__=="__main__":
+    sft()

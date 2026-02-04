@@ -19,10 +19,10 @@ for eval_dict in evaluations:
     if eval_dict['format_reward']==0.0 and eval_dict["answer_reward"]==0.0:
         invalid_count+=1
 print("format_reward=0 and answer_reward=0:",invalid_count)
-# 输出部分生成结果进行检查
-# for i in range(5):
-#     print(f"Prompt: {prompts[i]}")
-#     print(f"Generated Answer: {generations[i]}")
-#     print(f"Reference Answer: {answers[i]}")
-#     print(f"Evaluation: {evaluations[i]}")
-#     print("-" * 50)
+#输出部分生成结果进行检查
+for i in range(5):
+    print(f"Prompt: {prompts[i]}")
+    print(f"Generated Answer: {generations[i]}")
+    print(f"Reference Answer: {answers[i]}")
+    print(f"Evaluation: {evaluations[i]['reward']}")
+    print("-" * 50)
