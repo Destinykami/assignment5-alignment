@@ -7,9 +7,11 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerBase
-from cs336_alignment.sft import tokenize_prompt_and_output,sft_microbatch_train_step
+from cs336_alignment.sft import sft_microbatch_train_step
+from cs336_alignment.tokenize_prompt_and_output import tokenize_prompt_and_output
 from cs336_alignment.sft_utils import compute_entropy,get_response_log_probs,masked_normalize
 from cs336_alignment.grpo_utils import compute_group_normalized_rewards,compute_naive_policy_gradient_loss,compute_grpo_clip_loss,compute_policy_gradient_loss,masked_mean
+from cs336_alignment.grpo import grpo_microbatch_train_step
 def run_tokenize_prompt_and_output(
     prompt_strs: list[str],
     output_strs: list[str],
@@ -246,7 +248,7 @@ def run_grpo_microbatch_train_step(
         tuple[torch.Tensor, dict[str, torch.Tensor]]: 
             the policy gradient loss and its metadata.
     """
-    raise NotImplementedError
+    return grpo_microbatch_train_step(policy_log_probs,response_mask,gradient_accumulation_steps,loss_type,raw_rewards,advantages,old_log_probs,cliprange)
 
 
 def run_masked_normalize(
