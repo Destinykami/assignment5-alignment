@@ -2,7 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer,PreTrainedModel,get
 import torch
 from typing import Dict, List, Tuple
 import json
-from sft_utils import get_response_log_probs,masked_normalize
+from .sft_utils import get_response_log_probs,masked_normalize
 from torch.utils.data import DataLoader
 def tokenize_prompt_and_output(prompt_strs: List[str],
                                output_strs: List[str],
